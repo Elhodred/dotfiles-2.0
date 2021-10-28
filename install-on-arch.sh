@@ -18,9 +18,10 @@ echo "##########################################################################
 sudo pacman -S --noconfirm --needed base-devel wget git
 
 # choose video driver
-echo "1) xf86-video-intel 	2) xf86-video-amdgpu 3) nvidia 4) Skip"
+echo "1) xf86-video-intel 	2) xf86-video-amdgpu 3) nvidia 4) nvidia-340xx 5) Skip"
 read -r -p "Choose you video card driver(default 1)(will not re-install): " vid
 
+AURDRI=""
 case $vid in 
 [1])
 	DRI='xf86-video-intel'
@@ -31,10 +32,15 @@ case $vid in
 	;;
 
 [3])
-    DRI='nvidia nvidia-settings nvidia-utils'
-    ;;
+    	DRI='nvidia nvidia-settings nvidia-utils'
+    	;;
 
 [4])
+	DRI=""
+	AURDRI="nvidia-340xx"
+	;;
+
+[5])
 	DRI=""
 	;;
 [*])
@@ -43,7 +49,7 @@ case $vid in
 esac
 
 # install xorg if not installed
-sudo pacman -S --noconfirm --needed rofi feh xorg xorg-xinit xorg-xinput $DRI xmonad
+sudo pacman -S --noconfirm --needed rofi feh xorg xorg-xinit xorg-xinput $DRI xmonad lightdm lightdm-gtk-greeter gtk2 libnotify mpv cronie tint2 acpi acpilight accountsservice alsa-utils alsa-plugins jq youtube-dl fzf
 
 # install fonts
 mkdir -p ~/.local/share/fonts
@@ -69,33 +75,40 @@ then
 fi
 
 $HELPER -S picom-jonaburg-git\
-	   acpi              \
 	   candy-icons-git   \
 	   wmctrl            \
 	   alacritty         \
 	   playerctl         \
+	   brightnessctl     \
 	   dunst             \
 	   xmonad-contrib    \
-	   jq                \
 	   xclip             \
 	   maim              \
 	   rofi-greenclip    \
 	   xautolock         \
-	   betterlockscreen
+	   $AURDRI           \
+	   betterlockscreen  \
+	   play-with-mpv-git \
+	   ytfzf
 
 #install custom picom config file 
-mkdir -p ~/.config/
-# cd .config/
-# git clone https://gist.github.com/f70dea1449cfae856d42b771912985f9.git ./picom 
-    if [ -d ~/.config/rofi ]; then
+if [ ! -d ~/.config]; then
+    mkdir -p ~/.config/
+fi
+
+    #ROFI
+    if [ -e ~/.config/rofi ]; then
         echo "Rofi configs detected, backing up..."
-        mkdir ~/.config/rofi.old && mv ~/.config/rofi/* ~/.config/rofi.old/
-        cp -r ./config/rofi/* ~/.config/rofi;
-    else
-        echo "Installing rofi configs..."
-        mkdir ~/.config/rofi && cp -r ./config/rofi/* ~/.config/rofi;
+	if [-d ~/.config/rofi.old ]; then
+	    rm -rf ~/.config/rofi.old;
+	fi
+        mkdir ~/.config/rofi.old && mv ~/.config/rofi/* ~/.config/rofi.old/;
     fi
+    echo "Installing rofi configs..."
+    ln -sf ./config/rofi/ ~/.config/rofi
     sleep 5
+
+    #EWW
     echo "1)1366 x 768       2)1920 x 1080"
     read -r -p "Choose your screen resolution: " res
     case $res in 
@@ -109,69 +122,82 @@ mkdir -p ~/.config/
 	EWW_DIR='config/eww-1366'
 	;;
     esac
-    if [ -d ~/.config/eww ]; then
+    if [ -e ~/.config/eww ]; then
         echo "Eww configs detected, backing up..."
-        mkdir ~/.config/eww.old && mv ~/.config/eww/* ~/.config/eww.old/
-        cp -r ./$EWW_DIR/* ~/.config/eww;
-    else
-        echo "Installing eww configs..."
-        mkdir ~/.config/eww && cp -r ./$EWW_DIR/* ~/.config/eww;
+    	if [ -d ~/.config/eww.old ]; then
+	    rm -rf ~/.config/eww.old;
+	fi
+        mkdir ~/.config/eww.old && mv ~/.config/eww/* ~/.config/eww.old/;
     fi
-    if [ -f ~/.config/picom.conf ]; then
+    echo "Installing eww configs..."
+    ln -sf ./$EWW_DIR/ ~/.config/eww
+    ln -sf ./eww-scripts/ ~/.config/eww/scripts
+
+    #PICOM
+    if [ -e ~/.config/picom.conf ]; then
         echo "Picom configs detected, backing up..."
-        cp ~/.config/picom.conf ~/.config/picom.conf.old;
-        cp ./config/picom.conf ~/.config/picom.conf;
-    else
-        echo "Installing picom configs..."
-         cp ./config/picom.conf ~/.config/picom.conf;
+        cp -L ~/.config/picom.conf ~/.config/picom.conf.old;
     fi
-    if [ -f ~/.config/alacritty.yml ]; then
+    echo "Installing picom configs..."
+    ln -sf ./config/picom.conf ~/.config/picom.conf
+
+    #ALACRITTY
+    if [ -e ~/.config/alacritty.yml ]; then
         echo "Alacritty configs detected, backing up..."
-        cp ~/.config/alacritty.yml ~/.config/alacritty.yml.old;
-        cp ./config/alacritty.yml ~/.config/alacritty.yml;
-    else
-        echo "Installing alacritty configs..."
-         cp ./config/alacritty.yml ~/.config/alacritty.yml;
+        cp -L ~/.config/alacritty.yml ~/.config/alacritty.yml.old;
     fi
-    if [ -d ~/.config/dunst ]; then
+    echo "Installing alacritty configs..."
+    ln -sf ./config/alacritty.yml ~/.config/alacritty.yml
+  
+    #DUNST
+    if [ -e ~/.config/dunst ]; then
         echo "Dunst configs detected, backing up..."
+    	if [ -d ~/.config/dunst.old ]; then
+	    rm -rf ~/.config/dunst.old;
+	fi
         mkdir ~/.config/dunst.old && mv ~/.config/dunst/* ~/.config/dunst.old/
-        cp -r ./config/dunst/* ~/.config/dunst;
-    else
-        echo "Installing dunst configs..."
-        mkdir ~/.config/dunst && cp -r ./config/dunst/* ~/.config/dunst;
     fi
-    if [ -d ~/wallpapers ]; then
-        echo "Adding wallpaper to ~/wallpapers..."
-        cp ./wallpapers/yosemite-lowpoly.jpg ~/wallpapers/;
-    else
-        echo "Installing wallpaper..."
-        mkdir ~/wallpapers && cp -r ./wallpapers/* ~/wallpapers/;
+    echo "Installing dunst configs..."
+    ln -sf ./config/dunst/ ~/.config/dunst
+
+    if [ ! -d ~/wallpapers ]; then
+        echo "Creating ~/wallpapers..."
+        mkdir ~/wallpapers;
     fi
-    if [ -d ~/.config/tint2 ]; then
+    echo "Installing wallpapers..."
+    cp -r ./wallpapers/* ~/wallpapers/
+
+    if [ -e ~/.config/tint2 ]; then
         echo "Tint2 configs detected, backing up..."
-        mkdir ~/.config/tint2.old && mv ~/.config/tint2/* ~/.config/tint2.old/
-        cp -r ./config/tint2/* ~/.config/tint2;
-    else
-        echo "Installing tint2 configs..."
-        mkdir ~/.config/tint2 && cp -r ./config/tint2/* ~/.config/tint2;
+    	if [ -d ~/.config/tint2.old ]; then
+	    rm -rf ~/.config/tint.old;
+	fi
+        mkdir ~/.config/tint2.old && mv ~/.config/tint2/* ~/.config/tint2.old/;
     fi
-    if [ -d ~/.xmonad ]; then
+    echo "Installing tint2 configs..."
+    ln -sf ./config/tint2/ ~/.config/tint2
+
+    if [ -e ~/.xmonad ]; then
         echo "XMonad configs detected, backing up..."
+    	if [ -d ~/.xmonad.old ]; then
+	    rm -rf ~.xmonad.old;
+	fi
         mkdir ~/.xmonad.old && mv ~/.xmonad/* ~/.xmonad.old/
-        cp -r ./xmonad/* ~/.xmonad/;
-    else
-        echo "Installing xmonad configs..."
-        mkdir ~/.xmonad && cp -r ./xmonad/* ~/.xmonad;
     fi
-    if [ -d ~/bin ]; then
+    echo "Installing xmonad configs..."
+    ln -sf ./xmonad/* ~/.xmonad;
+
+    if [ -e ~/bin ]; then
         echo "~/bin detected, backing up..."
+    	if [ -d ~/bin.old ]; then
+	    rm -rf ~/bin.old
+	fi
         mkdir ~/bin.old && mv ~/bin/* ~/bin.old/
-        cp -r ./bin/* ~/bin;
+        ln -sf ./bin/ ~/bin;
 	clear
     else
         echo "Installing bin scripts..."
-        mkdir ~/bin && cp -r ./bin/* ~/bin/;
+        ln -sf ./bin/ ~/bin/;
 	clear
         SHELLNAME=$(echo $SHELL | grep -o '[^/]*$')
         case $SHELLNAME in

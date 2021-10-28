@@ -1,0 +1,6 @@
+- Add automatically crontrab and enable cronie
+- Add lightdm config and enable
+- Review all applications
+- Script specific for my MacbookPro5,2
+	* sudo ./gpu-switch -d
+	* xorg.conf

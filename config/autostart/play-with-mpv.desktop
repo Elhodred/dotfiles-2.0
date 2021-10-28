@@ -1,0 +1,7 @@
+[Desktop Entry]
+Categories=AudioVideo;Audio;Video;Player;TV
+Comment=Extension and python server that allows you to play videos in webpages with MPV.
+Exec=play-with-mpv
+Icon=mpv
+Name=Play With MPV (server)
+Type=Application
